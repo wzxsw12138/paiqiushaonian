@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fdf6e9">
+<title>测一测｜你对应《排球少年》里的哪一位</title>
+<style>
+:root{
+  --ink:#211d1a;
+  --paper:#fdf6e9;
+  --orange:#ff8c42;
+  --orange2:#ff6b3d;
+  --yellow:#ffd36e;
+  --sky:#8ecff5;
+  --pink:#ffb5c2;
+  --mint:#a8ddc8;
+  --violet:#b8a7e8;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh;
+  font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  color:var(--ink);
+  background-color:#fdf6e9;
+  background-image:radial-gradient(rgba(33,29,26,.10) 1.1px,transparent 1.1px);
+  background-size:13px 13px;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(900px 460px at 16% -12%,#ffe2c6 0%,transparent 58%),
+    radial-gradient(760px 420px at 98% 2%,#d9ecff 0%,transparent 60%),
+    radial-gradient(720px 440px at 50% 110%,#ffdfe6 0%,transparent 58%);
+}
+.stage{
+  position:relative;z-index:1;
+  max-width:580px;margin:0 auto;
+  padding:clamp(16px,4vw,28px) clamp(14px,4.2vw,26px) 46px;
+  min-height:100vh;
+}
+.screen{display:none}
+.screen.active{display:block;animation:fadeUp .42s cubic-bezier(.2,.9,.3,1) both}
+#screen-intro.active{display:flex;align-items:center;min-height:calc(100vh - 60px)}
+#screen-intro .intro{width:100%;min-width:0}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* ---------- 通用组件 ---------- */
+.badge{
+  display:inline-block;background:#fff;border:2.5px solid var(--ink);border-radius:99px;
+  padding:6px 14px;font-size:12.5px;font-weight:800;letter-spacing:.06em;
+  box-shadow:3px 3px 0 var(--ink);transform:rotate(-2deg);
+}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border:3px solid var(--ink);border-radius:15px;
+  background:var(--orange);color:var(--ink);
+  font-family:inherit;font-weight:900;font-size:16px;padding:14px 24px;
+  box-shadow:6px 6px 0 var(--ink);cursor:pointer;
+  transition:transform .13s,box-shadow .13s,background .13s;
+}
+.btn:active{transform:translate(4px,4px);box-shadow:2px 2px 0 var(--ink)}
+.btn.ghost{background:#fff}
+.btn.big{width:100%;font-size:18px;padding:18px;border-radius:18px}
+
+/* ---------- 启动页 ---------- */
+.intro{text-align:left;padding-top:8px}
+.title{margin:20px 0 0;font-weight:900;line-height:1.02;letter-spacing:-.02em}
+.title .l1{display:block;font-size:clamp(46px,13.5vw,66px)}
+.title .l2{display:block;font-size:clamp(21px,6.2vw,29px);margin-top:6px}
+.title .l3{display:block;font-size:clamp(34px,10vw,50px);margin-top:2px}
+.title .l3 em{
+  font-style:normal;background:linear-gradient(transparent 62%,var(--yellow) 62%);
+  padding:0 4px;
+}
+.lead{
+  margin:18px 0 0;font-size:15px;line-height:1.85;color:#4d4640;max-width:24em;font-weight:500;
+}
+.lead b{color:var(--ink);background:linear-gradient(transparent 60%,#ffe0c4 60%)}
+.roster{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:22px 0 4px}
+.roster .mini{
+  min-width:0;background:#fff;border:2.5px solid var(--ink);border-radius:16px;
+  box-shadow:4px 4px 0 rgba(33,29,26,.85);padding:8px;text-align:center;
+  transform:rotate(var(--r,0deg));
+}
+.roster .mini img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;border-radius:50%;border:2px solid rgba(33,29,26,.25)}
+.roster .mini span{font-size:11px;font-weight:800;display:block;margin-top:6px;color:#5a5450}
+.roster .more{
+  min-width:0;border:2.5px dashed rgba(33,29,26,.45);border-radius:16px;display:flex;
+  align-items:center;justify-content:center;text-align:center;
+  font-size:12px;font-weight:800;color:#6d665f;line-height:1.5;padding:8px;
+}
+.start-wrap{margin-top:26px}
+.tips{margin-top:14px;font-size:12.5px;color:#7d756d;font-weight:600;text-align:center}
+
+/* ---------- 答题页 ---------- */
+.quiz-head{
+  position:sticky;top:0;z-index:5;
+  padding:8px 0 12px;
+  background:linear-gradient(#fdf6e9 62%,rgba(253,246,233,0));
+}
+.head-row{display:flex;align-items:center;gap:12px}
+.progress{
+  flex:1;height:13px;border:2.5px solid var(--ink);border-radius:99px;
+  background:#fff;overflow:hidden;
+}
+.progress i{
+  display:block;height:100%;width:0;border-radius:99px;
+  background:repeating-linear-gradient(45deg,var(--orange) 0,var(--orange) 7px,var(--yellow) 7px,var(--yellow) 14px);
+  transition:width .4s cubic-bezier(.2,.9,.3,1);
+}
+.counter{font-size:13px;font-weight:900;letter-spacing:.04em;min-width:62px;text-align:right}
+.counter b{font-size:19px;color:var(--orange2)}
+.card{
+  background:#fff;border:3px solid var(--ink);border-radius:20px;
+  padding:20px 17px 14px;box-shadow:7px 7px 0 rgba(33,29,26,.9);
+  animation:cardIn .36s cubic-bezier(.2,.9,.3,1) both;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px) rotate(-.8deg)}to{opacity:1;transform:none}}
+.q-no{
+  display:inline-block;background:var(--ink);color:#fff;font-size:12px;
+  font-weight:900;padding:3px 10px;border-radius:8px;letter-spacing:.1em;
+}
+.q-title{
+  margin:12px 0 16px;font-size:clamp(17px,4.6vw,20px);line-height:1.55;font-weight:800;
+}
+.opts{display:block}
+.opt{
+  display:flex;align-items:center;gap:11px;
+  background:#fff;border:2.5px solid var(--ink);border-radius:14px;
+  padding:13px 14px;margin-bottom:10px;cursor:pointer;
+  font-size:15px;line-height:1.45;font-weight:600;
+  box-shadow:3px 3px 0 rgba(33,29,26,.82);
+  transition:transform .15s,box-shadow .15s,background .15s;
+  position:relative;
+}
+.opt:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink);background:#fffaf0}
+.opt:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.opt.sel{background:var(--yellow);transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.mark{
+  flex:0 0 26px;width:26px;height:26px;border-radius:50%;
+  border:2.2px solid var(--ink);background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12.5px;font-weight:900;
+}
+.opt.sel .mark{background:var(--ink);color:#fff}
+.txt{flex:1}
+.tick{
+  flex:0 0 auto;width:20px;text-align:center;font-weight:900;
+  color:var(--ink);opacity:0;transform:scale(.4) rotate(-20deg);
+  transition:opacity .18s,transform .28s cubic-bezier(.2,.9,.3,1.5);
+}
+.opt.sel .tick{opacity:1;transform:scale(1) rotate(0)}
+.card-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:4px;padding-top:8px;
+}
+.link{
+  border:none;background:none;font-family:inherit;font-size:13px;
+  font-weight:800;color:#6d665f;cursor:pointer;padding:6px 0;
+}
+.link:disabled{opacity:.3;cursor:default}
+.hint{font-size:12px;color:#8d857d;font-weight:600}
+
+/* ---------- 扫描页 ---------- */
+.scanning{text-align:center;padding:44px 20px}
+.ball{width:64px;height:64px;margin:0 auto 20px;animation:spin 1.1s linear infinite}
+.ball svg{width:100%;height:100%;display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scanning p{font-size:15px;font-weight:800;margin:0}
+.scanning small{display:block;margin-top:8px;font-size:12.5px;color:#8d857d;font-weight:600}
+
+/* ---------- 结果页 ---------- */
+.res-hero{display:flex;align-items:center;gap:15px;margin-bottom:14px}
+.ava-wrap{position:relative;flex:0 0 clamp(112px,31vw,142px)}
+.ava{
+  width:100%;aspect-ratio:1/1;border-radius:50%;overflow:hidden;
+  border:3px solid var(--ink);background:#fff;
+  box-shadow:6px 6px 0 var(--ink);transform:rotate(-2.5deg);
+}
+.ava img{width:100%;height:100%;object-fit:cover;display:block}
+.match{
+  position:absolute;right:-8px;bottom:-6px;
+  background:var(--yellow);border:2.5px solid var(--ink);border-radius:10px;
+  font-size:11px;font-weight:900;padding:3px 7px;transform:rotate(-5deg);
+  box-shadow:2px 2px 0 rgba(33,29,26,.8);
+}
+.res-meta{flex:1;min-width:0}
+.kicker{
+  font-size:12px;font-weight:900;letter-spacing:.12em;color:#8d857d;
+}
+.res-name{
+  margin:4px 0 4px;font-size:clamp(27px,8.4vw,38px);font-weight:900;line-height:1.1;letter-spacing:-.02em;
+}
+.res-team{font-size:12.5px;font-weight:800;color:#6d665f;margin-top:9px}
+.res-team em{
+  font-style:normal;background:var(--ink);color:#fff;padding:2px 7px;border-radius:6px;margin-right:6px;
+}
+.slogan{
+  background:var(--ink);color:#fff;border-radius:14px;padding:13px 16px;
+  font-size:15.5px;font-weight:800;line-height:1.5;
+  transform:rotate(-1deg);box-shadow:5px 5px 0 rgba(255,140,66,.9);
+  margin:16px 0 4px;
+}
+.block{
+  background:#fff;border:2.5px solid var(--ink);border-radius:16px;
+  padding:14px 16px;margin-top:12px;box-shadow:4px 4px 0 rgba(33,29,26,.85);
+}
+.block h3{
+  display:flex;align-items:center;gap:8px;
+  margin:0 0 8px;font-size:13.5px;font-weight:900;letter-spacing:.02em;
+}
+.block h3::before{
+  content:"";width:9px;height:9px;background:var(--orange);
+  border:2px solid var(--ink);transform:rotate(45deg);flex:0 0 auto;
+}
+.block p{margin:0;font-size:14.5px;line-height:1.85;color:#3a3531;font-weight:500}
+.dim-row{display:flex;align-items:center;gap:9px;margin:8px 0;font-size:12.5px;font-weight:800}
+.dim-name{flex:0 0 62px;color:#514b46}
+.dim-bar{flex:1;height:11px;border:2px solid var(--ink);border-radius:99px;background:#f4ece0;overflow:hidden}
+.dim-bar i{display:block;height:100%;width:0;transition:width .85s cubic-bezier(.2,.9,.3,1)}
+.dim-val{flex:0 0 34px;text-align:right;font-size:11.5px;color:#6d665f}
+.near{
+  margin-top:12px;font-size:12.5px;font-weight:700;color:#6d665f;
+  background:#fff;border:2px dashed rgba(33,29,26,.4);border-radius:12px;
+  padding:9px 13px;
+}
+.near b{color:var(--orange2)}
+.actions{display:grid;gap:10px;margin-top:18px}
+.foot{
+  margin-top:20px;text-align:center;font-size:11.5px;color:#8d857d;font-weight:600;line-height:1.7;
+}
+
+/* ---------- 提示条 ---------- */
+.toast{
+  position:fixed;left:50%;bottom:32px;transform:translate(-50%,20px);
+  background:var(--ink);color:#fff;font-size:13.5px;font-weight:800;
+  padding:11px 20px;border-radius:99px;opacity:0;pointer-events:none;
+  transition:opacity .25s,transform .25s;z-index:50;
+  box-shadow:0 6px 20px rgba(0,0,0,.2);
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:420px){
+  .res-hero{gap:11px}
+  .block p{font-size:14px}
+  .opt{font-size:14.5px;padding:12px 12px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ========== 视图：启动页 ========== -->
+  <section id="screen-intro" class="screen active">
+    <div class="intro">
+      <div class="badge">趣味人格小测 · 24 题</div>
+      <h1 class="title">
+        <span class="l1">测一测</span>
+        <span class="l2">你对应《排球少年》里的</span>
+        <span class="l3"><em>哪一位？</em></span>
+      </h1>
+      <p class="lead">
+        不考动漫知识，也不考排球常识。<br>
+        24 个<span id="leadHl">日常小场景</span>，凭第一反应选就行——<br>
+        测的是你身上那股<b>藏不住的劲儿</b>。
+      </p>
+
+      <div class="roster" id="roster"></div>
+
+      <div class="start-wrap">
+        <button class="btn big" id="startBtn">开始测试 <span>→</span></button>
+      </div>
+      <p class="tips">约 3 分钟 · 没有标准答案 · 做完直接出结果</p>
+    </div>
+  </section>
+
+  <!-- ========== 视图：答题页 ========== -->
+  <section id="screen-quiz" class="screen">
+    <div class="quiz-head">
+      <div class="head-row">
+        <div class="progress"><i id="bar"></i></div>
+        <div class="counter"><b id="curNum">1</b> / 24</div>
+      </div>
+    </div>
+    <div id="qArea"></div>
+  </section>
+
+  <!-- ========== 视图：结果页 ========== -->
+  <section id="screen-result" class="screen">
+    <div id="resultArea"></div>
+  </section>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   1. 维度定义
+   h 热血 / c 冷静 / e 共情 / d 胜负欲 / s 细腻 / f 自由
+   ========================================================= */
+const DIMS = ['h','c','e','d','s','f'];
+const DIM_NAME = {h:'热血指数',c:'冷静指数',e:'共情指数',d:'胜负欲',s:'细腻度',f:'自由值'};
+const DIM_COLOR = {h:'#ff8c42',c:'#8ecff5',e:'#ffb5c2',d:'#ffd36e',s:'#b8a7e8',f:'#a8ddc8'};
+
+/* =========================================================
+   2. 题库（24 题 · 全部生活场景 / 超现实 / 反事实 / 规则怪谈）
+   ========================================================= */
+const QUESTIONS = [
+{q:'手机只剩 1% 电，你还是点开了——',o:[
+  {t:'那个没发完的聊天框，话得说完',s:{e:2,f:1}},
+  {t:'运动 App，今天的记录不能断',s:{h:2,d:1}},
+  {t:'备忘录，把明天的事再理一遍',s:{c:2,d:1}},
+  {t:'随便一个视频，能看一秒是一秒',s:{f:2,s:1}}]},
+
+{q:'搬家只能先把一样东西装箱，你抓的是——',o:[
+  {t:'那双一直没舍得穿的鞋',s:{h:2,d:1}},
+  {t:'那本写满计划的笔记',s:{c:2,d:1}},
+  {t:'朋友送的、很丑但很重要的东西',s:{e:2,s:1}},
+  {t:'一箱「说不定以后有用」的小玩意',s:{f:2,s:1}}]},
+
+{q:'一觉醒来，你能听见别人心里的下一句话。你会——',o:[
+  {t:'立刻找人试试，看是不是真的',s:{h:2,f:1}},
+  {t:'先记下来，慢慢找规律',s:{c:2,s:1}},
+  {t:'只在在意的人身上用',s:{e:2,s:1}},
+  {t:'太吵了，想办法把它关掉',s:{c:1,f:1,s:1}}]},
+
+{q:'如果明天起全世界放假一整年——',o:[
+  {t:'太好了，终于能天天动起来',s:{h:2,f:1}},
+  {t:'先拉个表，把这一年规划掉',s:{c:2,d:1}},
+  {t:'把所有人叫上，一起干点什么',s:{e:2,h:1}},
+  {t:'什么都不干，先躺三天',s:{f:2,c:1}}]},
+
+{q:'你误入一层「所有门都必须敲三下」的楼——',o:[
+  {t:'敲得又响又快，看谁先撑不住',s:{h:2,f:1}},
+  {t:'认真地数，严格三下，不多不少',s:{c:2,d:1}},
+  {t:'帮别人数着，提醒他们别敲错',s:{e:2,s:1}},
+  {t:'偷偷试一次敲两下，看会怎样',s:{f:2,c:1}}]},
+
+{q:'书桌上最不能少的东西是——',o:[
+  {t:'一个能捏能扔的东西',s:{h:2,d:1}},
+  {t:'一支笔和一张纸',s:{c:2,d:1}},
+  {t:'一张和别人的合照',s:{e:2,s:1}},
+  {t:'几个没用但很好看的小摆件',s:{f:2,s:1}}]},
+
+{q:'组队打游戏，你总是自动变成——',o:[
+  {t:'冲在最前面的那个',s:{h:2,d:1}},
+  {t:'在后面算血量算伤害的那个',s:{c:2,d:1}},
+  {t:'一直问「你还好吗」的那个',s:{e:2,s:1}},
+  {t:'打到一半跑去做别的的那个',s:{f:2,h:1}}]},
+
+{q:'「他明明可以不管的，但他还是——」你会怎么接——',o:[
+  {t:'冲了上去',s:{h:2,d:1}},
+  {t:'先想清楚，再动手',s:{c:2,d:1}},
+  {t:'把所有人都一起拉上了',s:{e:2,h:1}},
+  {t:'用了一个谁也想不到的办法',s:{f:2,c:1}}]},
+
+{q:'有一个「重来一次」的按钮，只能用一次，你会用在——',o:[
+  {t:'那场差一点就赢的比赛',s:{d:2,h:1}},
+  {t:'那句说错了的话',s:{s:2,e:1}},
+  {t:'那个没留住的人',s:{e:2,s:1}},
+  {t:'不用，现在这样也挺好',s:{f:2,c:1}}]},
+
+{q:'一天里只能保留一件事，你留下——',o:[
+  {t:'出门去运动',s:{h:2,d:1}},
+  {t:'把手上的事做完',s:{c:2,d:1}},
+  {t:'和重要的人待在一起',s:{e:2,s:1}},
+  {t:'那件一直想做、看起来没用的事',s:{f:2,s:1}}]},
+
+{q:'一觉醒来，你多了个完全听话的分身，你让它去——',o:[
+  {t:'替我去上班／上学，把活干完',s:{c:2,d:1}},
+  {t:'替我去运动，把身体练起来',s:{h:2,d:1}},
+  {t:'替我去陪陪该陪的人',s:{e:2,s:1}},
+  {t:'替我去做那件一直没开始的事',s:{f:2,h:1}}]},
+
+
+{q:'规定午休必须闭眼二十分钟，你会——',o:[
+  {t:'一秒入睡，睡得理直气壮',s:{f:2,c:1}},
+  {t:'闭着眼，脑子在排练下午的事',s:{d:2,c:1}},
+  {t:'偷偷瞄旁边的人睡着没',s:{s:2,e:1}},
+  {t:'闭着眼编故事，越想越精神',s:{f:2,s:1}}]},
+
+{q:'如果要用一种天气形容自己，你选——',o:[
+  {t:'大晴天，晒得人睁不开眼',s:{h:2,f:1}},
+  {t:'阴天，很安静，但压着点什么',s:{c:2,s:1}},
+  {t:'小雨，落在谁身上都刚刚好',s:{e:2,s:1}},
+  {t:'龙卷风，说来就来',s:{f:2,h:1}}]},
+
+{q:'给队友加 buff，你会把点加在——',o:[
+  {t:'体力',s:{h:2,e:1}},
+  {t:'判断力',s:{c:2,d:1}},
+  {t:'心情和士气',s:{e:2,h:1}},
+  {t:'想象力',s:{f:2,c:1}}]},
+
+{q:'朋友说「你这个人啊，就是——」，你希望后半句是——',o:[
+  {t:'太拼了',s:{d:2,h:1}},
+  {t:'想太多了',s:{s:2,c:1}},
+  {t:'太好了',s:{e:2,s:1}},
+  {t:'太怪了',s:{f:2,h:1}}]},
+
+{q:'如果能回到高一开学第一天——',o:[
+  {t:'直接去球场或社团报名',s:{h:2,d:1}},
+  {t:'先摸清这届谁最厉害',s:{c:2,d:1}},
+  {t:'先认识一个能一起吃饭的人',s:{e:2,s:1}},
+  {t:'什么都不改，再来一次也挺好',s:{f:2,c:1}}]},
+
+{q:'只能保留一段「失败」的经历，你留——',o:[
+  {t:'差一点就赢的那次',s:{d:2,h:1}},
+  {t:'搞砸了但学到东西的那次',s:{c:2,d:1}},
+  {t:'和别人一起崩掉的那次',s:{e:2,s:1}},
+  {t:'莫名其妙失败但很好笑的那次',s:{f:2,s:1}}]},
+
+{q:'你能看见每个人头顶的状态条，你最先看——',o:[
+  {t:'谁在兴奋',s:{h:2,d:1}},
+  {t:'谁在硬撑',s:{s:2,e:1}},
+  {t:'谁在难过',s:{e:2,s:1}},
+  {t:'谁看起来最奇怪',s:{f:2,c:1}}]},
+
+{q:'房间门上写着「请勿回头」，你——',o:[
+  {t:'立刻回头',s:{h:2,f:1}},
+  {t:'站在那儿想，这句话为什么写在这',s:{c:2,s:1}},
+  {t:'提醒同行的人千万别回头',s:{e:2,s:1}},
+  {t:'加快脚步，别管它',s:{c:2,h:1}}]},
+
+{q:'挑一张当手机壁纸——',o:[
+  {t:'一张高速运动的模糊照片',s:{h:2,f:1}},
+  {t:'一张结构复杂的图',s:{c:2,d:1}},
+  {t:'一群人的合照',s:{e:2,s:1}},
+  {t:'一张看不懂但很美的画',s:{f:2,s:1}}]},
+
+{q:'人生有存档点，你会存在——',o:[
+  {t:'每次赢的时候',s:{d:2,h:1}},
+  {t:'每次想明白一件事的时候',s:{c:2,s:1}},
+  {t:'和某个人待在一起的某一天',s:{e:2,s:1}},
+  {t:'一个普通得不能再普通的下午',s:{f:2,c:1}}]},
+
+{q:'深夜还没睡，你多半是在——',o:[
+  {t:'刚运动完，人还在兴奋',s:{h:2,d:1}},
+  {t:'复盘白天说过的某句话',s:{s:2,c:1}},
+  {t:'等一个人回消息',s:{e:2,s:1}},
+  {t:'想一个完全没用的东西',s:{f:2,s:1}}]},
+
+{q:'这件事没人会知道，你还会做到最好吗——',o:[
+  {t:'会，做到一半就停不下来',s:{h:2,d:1}},
+  {t:'会，我自己知道就行',s:{d:2,c:1}},
+  {t:'会，但还是希望有人看见',s:{e:2,s:1}},
+  {t:'看心情，做着做着就玩到别处去了',s:{f:2,h:1}}]},
+
+{q:'你可以让全世界忘记你做过的一件事，你选——',o:[
+  {t:'那件我拼尽全力、最后还是输了的',s:{h:1,d:2}},
+  {t:'那件我说错话、伤到人的',s:{s:2,e:1}},
+  {t:'那件我偷偷为别人做的',s:{e:2,s:1}},
+  {t:'那件我自己都觉得离谱的',s:{f:2,h:1}}]}
+];
+
+/* =========================================================
+   3. 人物数据（性格向量 + 文案 + 配色）
+   ========================================================= */
+const PEOPLE = [
+{
+  id:'hinata', name:'日向翔阳', team:'乌野', tag:'小巨人预备役',
+  slogan:'先跑起来，路会自己长出来。',
+  why:'你是那种「先冲出去再想为什么」的人。别人还在讨论靠不靠谱，你已经跑到了终点，回头喊他们快点。你不太怕丢脸，因为在你的排序里，「没试过」永远比「输了」更难受。你的能量是会传染的，房间里有你，气氛就不会凉。',
+  secret:'你其实很清楚自己短板在哪，只是懒得拿出来说。相册里大概藏着一堆「总有一天用得上」的热血截图。别人夸你时你笑着摆手，转头偷偷记很久。',
+  v:{h:5,c:1,e:3,d:5,s:2,f:4},
+},
+{
+  id:'kageyama', name:'影山飞雄', team:'乌野', tag:'沉默的精确主义者',
+  slogan:'不需要被理解，也照样能打出最漂亮的一球。',
+  why:'你不擅长说漂亮话，但做事标准很高，而且只对事不对人。你习惯把情绪压成一句「再来一次」，把不甘心变成下一轮的准备。你看上去难接近，其实只是把所有热情都放进了「把事情做对」这一件事里。',
+  secret:'你会在心里默默给身边人打分，然后在他真的做到的时候，悄悄把分数调高。被夸的时候会僵硬三秒，回一句「还行吧」。你其实很在意别人有没有跟上你。',
+  v:{h:4,c:2,e:1,d:5,s:2,f:1},
+},
+{
+  id:'daichi', name:'泽村大地', team:'乌野', tag:'队伍的定心丸',
+  slogan:'有你在，大家才敢往前冲。',
+  why:'你天生会看场面。谁情绪掉了、谁在硬撑、谁需要有人先开口，你都能第一时间察觉，然后不动声色地把事情扶正。你不抢风头，但很多事没有你就转不动。你的可靠不是天生的，是你自己决定要扛的。',
+  secret:'你也有想不管不顾一次的时候，只是每次都在最后一秒把责任捡回来。被依赖久了，会偷偷希望也有人这样对你。手机里大概存着所有人的生日。',
+  v:{h:3,c:4,e:5,d:4,s:3,f:1},
+},
+{
+  id:'sugawara', name:'菅原孝支', team:'乌野', tag:'温柔的操盘手',
+  slogan:'温柔也是一种很硬的实力。',
+  why:'你懂分寸，也懂人心。你不会硬抢，但你知道什么时候该站出来，什么时候该退一步让别人发光。你的温柔不是软，是清醒——你比谁都看得懂局面，却选择用最不伤人的方式把它推进。',
+  secret:'你偶尔会在心里「阴暗」一下，然后立刻自我反省。非常擅长在别人崩溃的时候稳住场，自己难受时却装作没事。你的笑大部分是真的，少数是给场面用的。',
+  v:{h:3,c:4,e:5,d:3,s:4,f:3},
+},
+{
+  id:'nishinoya', name:'西谷夕', team:'乌野', tag:'永远接得住的那个人',
+  slogan:'只要还没落地，就还有救。',
+  why:'你对「该上」的时机有种动物般的直觉。别人还在犹豫要不要救，你已经扑出去了。你不太算计值不值，你只在意「这一下不能放手」。你的存在感不是靠喊出来的，是靠一次次接住攒出来的。',
+  secret:'你嘴上很吵，心里其实特别怕辜负别人。你给人的安全感，是因为你自己也曾很想被谁稳稳接住一次。你对「信仰」这种词，意外地认真。',
+  v:{h:5,c:2,e:5,d:4,s:3,f:3},
+},
+{
+  id:'tsukishima', name:'月岛萤', team:'乌野', tag:'看穿一切的冷静怪',
+  slogan:'我不热血，我只是不想输得太难看。',
+  why:'你习惯先观察再决定，讨厌被情绪牵着走。你能一眼看出谁在虚张声势，也清楚自己什么时候在敷衍。你不轻易投入，可一旦认真起来，效率高得吓人。你的「毒舌」，其实只是把话说到位。',
+  secret:'你比表面看起来更在乎输赢，只是不肯承认。会一边说「没兴趣」，一边把事情研究到很细。别人认真感谢你的时候，你会很不自在。',
+  v:{h:1,c:5,e:2,d:4,s:4,f:3},
+},
+{
+  id:'yamaguchi', name:'山口忠', team:'乌野', tag:'安静的成长型选手',
+  slogan:'慢一点没关系，我一直在往上走。',
+  why:'你不是一开始就发光的那种人，但你是会一直往前走的那种人。你把别人的好记在心里，然后默默把自己练到能站上去。你的勇气不是天生的，是一次次害怕之后攒出来的。',
+  secret:'你有一瞬间的爆发力，平时都藏着。很会记住别人随口说过的话。你比谁都在意「我有没有拖后腿」，所以对别人格外宽容。',
+  v:{h:2,c:3,e:4,d:4,s:5,f:2},
+},
+{
+  id:'oikawa', name:'及川彻', team:'青叶城西', tag:'球场大王',
+  slogan:'我不是天生的天才，但我能让我们赢。',
+  why:'你太懂人了。你知道谁需要被激一下，谁需要被哄一下，谁只要一个眼神就够。你不是天生最强，但你能让一整支队伍变得最强。你的努力从来不明着摆，因为你不愿让人看见你有多拼。',
+  secret:'你心里有一道跨不过去的高墙，嘴上总装得云淡风轻。你对认可的渴望，藏在轻松玩笑底下。你笑着调侃别人，有时也是在确认：靠自己打磨出来的位置，依旧站得稳。',
+  v:{h:4,c:4,e:3,d:5,s:3,f:4},
+},
+{
+  id:'kuroo', name:'黑尾铁朗', team:'音驹', tag:'笑着布局的那种人',
+  slogan:'笑得最松的那个，通常想得最远。',
+  why:'你看起来随和好玩，脑子却一直在转。你喜欢用玩笑把气氛放松，再悄悄把局做成你想要的样子。你擅长看穿规则，也擅长利用规则。你的「坏笑」里没什么恶意，只有一点胜券在握。',
+  secret:'你其实很享受当那个「看起来最不认真、实际上最清楚」的人。对喜欢的事会研究到有点变态的程度。你会有意无意地逗某个人，只是想看他什么反应。',
+  v:{h:3,c:5,e:3,d:4,s:3,f:4},
+},
+{
+  id:'kenma', name:'孤爪研磨', team:'音驹', tag:'省电模式的天才',
+  slogan:'我不爱动，但我的脑子一直在跑。',
+  why:'你对「没兴趣」的事一秒都懒得投入，可对感兴趣的东西能钻研到忘记时间。你讨厌被推着走，却总能在关键时刻给出最刁钻的解法。你的冷静不是冷漠，是省下来的力气。',
+  secret:'你其实很会看人，只是懒得说。嘴上喊累，真需要你的时候又会站起来。社交电量有限，但你认定的那几个人，你会一直给他们留着位置。',
+  v:{h:1,c:5,e:2,d:2,s:4,f:3},
+},
+{
+  id:'bokuto', name:'木兔光太郎', team:'枭谷', tag:'情绪写在脸上的天才',
+  slogan:'我现在的状态，是满的。',
+  why:'你的状态起伏大得离谱，好的时候能带动所有人，低落的时候会突然安静。你不太会藏情绪，但你的直白反而让人放松。你对喜欢的事有种孩子气的执着，一被点燃就停不下来。',
+  secret:'你需要被肯定，而且会非常诚实地表现出来——这一点其实很珍贵。你低落时，只需要一个人说「你可以」，就能满血复活。你的快乐特别有感染力。',
+  v:{h:5,c:1,e:3,d:4,s:2,f:5},
+},
+{
+  id:'akaashi', name:'赤苇京治', team:'枭谷', tag:'最懂分寸的二传',
+  slogan:'把最好的球，托给最需要它的人。',
+  why:'你擅长在别人最需要的时候，递上那个「刚好合适」的东西——一句话、一个台阶、一次托球。你不抢戏，但你决定了整件事能不能成。你的稳，是长期自我管理练出来的。',
+  secret:'你也会累，只是习惯先把别人安顿好再说。对「分寸」敏感到近乎苛刻。偶尔也想来一次不讲道理的任性，但通常忍住了。',
+  v:{h:2,c:5,e:4,d:4,s:4,f:2},
+},
+{
+  id:'ushijima', name:'牛岛若利', team:'白鸟泽', tag:'一根筋的纯直球',
+  slogan:'不用解释，球过去就知道了。',
+  why:'你身上有种很干净的一根筋：认定了一件事，就只剩「把它做到最好」这一条路。你不是不在乎人，只是当你认准的东西摆在面前，其他一切会自动退成背景。你说话直、出手快、不绕弯，因为在你心里只有一把尺——事情本身的标准，够不够，一眼就能量出来。',
+  secret:'你对喜欢的事执着得有点可怕：别人叫它兴趣，你叫它「必须做到的事」。你不擅长说安慰的话，却会直接用行动把人拉起来。有人真心夸你时，你会很认真地记住——你其实很看重「懂行的人认不认可」。',
+  v:{h:4,c:4,e:2,d:5,s:2,f:1},
+}
+];
+
+/* =========================================================
+   4. 角色形象（动画截图，放在同目录 assets 文件夹里）
+   ========================================================= */
+function avatarHTML(p){
+  return '<img src="assets/' + p.id + '.jpg" alt="' + p.name + '">';
+}
+/* =========================================================
+   5. 页面渲染
+   ========================================================= */
+const screenIntro  = document.getElementById('screen-intro');
+const screenQuiz   = document.getElementById('screen-quiz');
+const screenResult = document.getElementById('screen-result');
+const qArea   = document.getElementById('qArea');
+const bar     = document.getElementById('bar');
+const curNum  = document.getElementById('curNum');
+const resultArea = document.getElementById('resultArea');
+
+let cur = 0;
+let answers = new Array(QUESTIONS.length).fill(null);
+let locked = false;
+
+/* 启动页小头像 */
+(function initRoster(){
+  const picks = [PEOPLE[0], PEOPLE[9], PEOPLE[5]];
+  const rots  = ['-2deg','1.5deg','-1deg'];
+  document.getElementById('roster').innerHTML =
+    picks.map((p, i) => `<div class="mini" style="--r:${rots[i]}">${avatarHTML(p)}<span>${p.team}</span></div>`).join('')
+    + `<div class="more">还有<br>10 位<br>选手 →</div>`;
+})();
+
+function switchScreen(el){
+  [screenIntro, screenQuiz, screenResult].forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderQ(){
+  const q = QUESTIONS[cur];
+  const sel = answers[cur];
+  qArea.innerHTML = `
+    <div class="card">
+      <span class="q-no">Q${String(cur + 1).padStart(2, '0')}</span>
+      <h2 class="q-title">${q.q}</h2>
+      <div class="opts">
+        ${q.o.map((o, i) => `
+          <div class="opt${sel === i ? ' sel' : ''}" data-i="${i}">
+            <span class="mark">${'ABCD'[i]}</span>
+            <span class="txt">${o.t}</span>
+            <span class="tick">✓</span>
+          </div>`).join('')}
+      </div>
+      <div class="card-foot">
+        <button class="link" id="backBtn" ${cur === 0 ? 'disabled' : ''}>← 上一题</button>
+        <span class="hint">凭第一反应选，不用纠结</span>
+      </div>
+    </div>`;
+  bar.style.width = ((cur + 1) / QUESTIONS.length * 100) + '%';
+  curNum.textContent = cur + 1;
+}
+
+qArea.addEventListener('click', function (e){
+  const backBtn = e.target.closest('#backBtn');
+  if (backBtn){
+    if (cur > 0){ cur--; renderQ(); }
+    return;
+  }
+  const opt = e.target.closest('.opt');
+  if (!opt || locked) return;
+
+  const i = Number(opt.dataset.i);
+  answers[cur] = i;
+  locked = true;
+
+  qArea.querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
+  opt.classList.add('sel');
+
+  setTimeout(function (){
+    locked = false;
+    if (cur < QUESTIONS.length - 1){
+      cur++;
+      renderQ();
+    } else {
+      finish();
+    }
+  }, cur === QUESTIONS.length - 1 ? 420 : 250);
+});
+
+/* 扫描动画 → 结果 */
+function finish(){
+  bar.style.width = '100%';
+  qArea.innerHTML = `
+    <div class="card scanning">
+      <div class="ball">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="46" fill="#ffd36e" stroke="#211d1a" stroke-width="4"/>
+          <path d="M50,4 C30,28 30,72 50,96" fill="none" stroke="#211d1a" stroke-width="4"/>
+          <path d="M50,4 C70,28 70,72 50,96" fill="none" stroke="#211d1a" stroke-width="4"/>
+          <path d="M8,34 C34,44 66,44 92,34" fill="none" stroke="#211d1a" stroke-width="4"/>
+          <path d="M8,66 C34,56 66,56 92,66" fill="none" stroke="#211d1a" stroke-width="4"/>
+        </svg>
+      </div>
+      <p>正在把 24 个答案和 13 位选手比对…</p>
+      <small>看看你的性格，更像谁的球风</small>
+    </div>`;
+  setTimeout(showResult, 1400);
+}
+
+/* =========================================================
+   6. 计分与匹配
+   ========================================================= */
+// 角色校准偏置：让 13 位选手的命中概率更均衡
+const BIAS = [-0.152,0.033,-0.189,0.074,-0.112,0.105,0.283,-0.058,-0.086,0.212,-0.080,0.016,-0.047];
+
+function zScore(obj){
+  const vals = DIMS.map(d => obj[d]);
+  const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const sd = Math.sqrt(vals.reduce((a, b) => a + (b - mean) * (b - mean), 0) / vals.length) || 1;
+  const out = {};
+  DIMS.forEach((d, i) => out[d] = (vals[i] - mean) / sd);
+  return out;
+}
+
+function calcResult(){
+  const user = {h:0,c:0,e:0,d:0,s:0,f:0};
+  answers.forEach((ai, qi) => {
+    const sc = QUESTIONS[qi].o[ai].s;
+    for (const k in sc) user[k] += sc[k];
+  });
+
+  // 每个维度的理论最高分
+  const maxv = {};
+  DIMS.forEach(d => {
+    let m = 0;
+    QUESTIONS.forEach(q => {
+      let qm = 0;
+      q.o.forEach(o => { qm = Math.max(qm, o.s[d] || 0); });
+      m += qm;
+    });
+    maxv[d] = m || 1;
+  });
+
+  const raw = {};
+  DIMS.forEach(d => raw[d] = user[d] / maxv[d]);
+
+  // 标准化：只看"相对强项"，避免中庸型向量占便宜
+  const uz0 = zScore(raw);
+  const uLen = Math.sqrt(DIMS.reduce((a, d) => a + uz0[d] * uz0[d], 0)) || 1;
+  const uz = {};
+  DIMS.forEach(d => uz[d] = uz0[d] / uLen);
+
+  const scored = PEOPLE.map((p, idx) => {
+    const pz0 = zScore(p.v);
+    const pLen = Math.sqrt(DIMS.reduce((a, d) => a + pz0[d] * pz0[d], 0)) || 1;
+    let cos = 0;
+    DIMS.forEach(d => cos += uz[d] * (pz0[d] / pLen));
+    return {p, cos, score: cos - BIAS[idx]};
+  }).sort((a, b) => b.score - a.score);
+
+  return {best: scored[0], second: scored[1], raw};
+}
+
+function showResult(){
+  const {best, second, raw} = calcResult();
+  const p = best.p;
+  const matchPct = Math.min(97, Math.max(87, Math.round(best.cos * 40 + 65)));
+  const maxRaw = Math.max(...DIMS.map(d => raw[d])) || 1;
+  const pct = {};
+  DIMS.forEach(d => pct[d] = Math.round(28 + raw[d] / maxRaw * 72));
+
+  resultArea.innerHTML = `
+    <div class="res-hero">
+      <div class="ava-wrap">
+        <div class="ava">${avatarHTML(p)}</div>
+        <div class="match">匹配 ${matchPct}%</div>
+      </div>
+      <div class="res-meta">
+        <div class="kicker">你的本命人物</div>
+        <h2 class="res-name">${p.name}</h2>
+        <div class="res-team"><em>${p.team}</em>${p.tag}</div>
+      </div>
+    </div>
+
+    <div class="slogan">「${p.slogan}」</div>
+
+    <div class="block">
+      <h3>为什么是你</h3>
+      <p>${p.why}</p>
+    </div>
+
+    <div class="block">
+      <h3>你的隐藏特质 & 小彩蛋</h3>
+      <p>${p.secret}</p>
+    </div>
+
+    <div class="block">
+      <h3>你的六维属性</h3>
+      ${DIMS.map(d => `
+        <div class="dim-row">
+          <span class="dim-name">${DIM_NAME[d]}</span>
+          <span class="dim-bar"><i data-w="${pct[d]}" style="background:${DIM_COLOR[d]}"></i></span>
+          <span class="dim-val">${pct[d]}</span>
+        </div>`).join('')}
+    </div>
+
+    <div class="near">和你也很像的是：<b>${second.p.name}</b>（${second.p.tag}）</div>
+
+    <div class="actions">
+      <button class="btn" id="shareBtn">复制结果，去发给朋友</button>
+      <button class="btn ghost" id="retryBtn">重新测一次</button>
+    </div>
+
+    <p class="foot">趣味性格匹配 · 只聊气质与行事风格，不评判对错<br>角色形象为《排球少年》动画截图 · 仅作趣味测试配图</p>
+  `;
+
+  switchScreen(screenResult);
+
+  // 条形动画
+  setTimeout(function (){
+    document.querySelectorAll('.dim-bar i').forEach(el => {
+      el.style.width = el.dataset.w + '%';
+    });
+  }, 120);
+
+  const shareText = `我测出来是「${p.name}」！\n「${p.slogan}」\n你是《排球少年》里的哪一位？来对一下～\n#人格测试 #排球少年`;
+
+  document.getElementById('shareBtn').addEventListener('click', function (){
+    copyText(shareText);
+  });
+  document.getElementById('retryBtn').addEventListener('click', function (){
+    cur = 0;
+    answers = new Array(QUESTIONS.length).fill(null);
+    locked = false;
+    renderQ();
+    switchScreen(screenIntro);
+  });
+}
+
+/* 复制 + 提示 */
+function copyText(text){
+  const done = function (){ toast('已复制，快去发群里'); };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(function (){ legacyCopy(text, done); });
+  } else {
+    legacyCopy(text, done);
+  }
+}
+function legacyCopy(text, cb){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  ta.remove();
+  cb();
+}
+let toastTimer = null;
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('on'), 2000);
+}
+
+/* =========================================================
+   7. 启动
+   ========================================================= */
+document.getElementById('startBtn').addEventListener('click', function (){
+  cur = 0;
+  answers = new Array(QUESTIONS.length).fill(null);
+  locked = false;
+  renderQ();
+  switchScreen(screenQuiz);
+});
+</script>
+</body>
+</html>
